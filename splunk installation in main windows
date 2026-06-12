@@ -1,0 +1,52 @@
+## Splunk Enterprise Installation (Main Windows Machine)
+
+Splunk Enterprise was installed on the main Windows machine and used as the central SIEM platform for the project. It collects, indexes, searches, and analyzes logs received from Ubuntu systems, Windows endpoints, and Suricata IDS through Splunk Universal Forwarders.
+
+### Installation Steps
+
+1. Visit the official Splunk Enterprise download page:
+   https://www.splunk.com/en_us/download/splunk-enterprise.html
+
+2. Download the Windows 64-bit installer.
+
+3. Run the installer and follow the installation wizard.
+
+4. Create an administrator username and password during setup.
+
+5. Complete the installation and launch Splunk Enterprise.
+
+6. Open Splunk in a web browser:
+
+```text
+http://localhost:8000
+```
+
+7. Log in using the administrator credentials created during installation.
+
+### Configure Splunk Receiving Port
+
+To receive logs from Splunk Universal Forwarders:
+
+1. Navigate to:
+
+```text
+Settings → Forwarding and Receiving
+```
+
+2. Click:
+
+```text
+Configure Receiving
+```
+
+3. Add a new receiving port:
+
+```text
+9997
+```
+
+4. Save the configuration.
+
+### Outcome
+
+After installation and configuration, Splunk Enterprise successfully received logs from Ubuntu systems, Windows endpoints, and Suricata IDS. The platform was used to perform log analysis, create dashboards, investigate alerts, and monitor security events across the SOC lab environment.
