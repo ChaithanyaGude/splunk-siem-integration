@@ -1,0 +1,43 @@
+Splunk Universal Forwarder Installation (Main Windows Machine)
+Step 1: Download Splunk Universal Forwarder
+
+Visit the official Splunk Universal Forwarder download page:
+
+https://www.splunk.com/en_us/download/universal-forwarder.html
+
+Download the Windows 64-bit Universal Forwarder installer.
+
+Step 2: Install Splunk Universal Forwarder
+Open the downloaded installer.
+Accept the license agreement.
+Select the installation directory.
+Enter administrator credentials when prompted.
+Complete the installation process.
+Step 3: Configure Forwarding Server
+
+During installation, specify the Splunk server receiving port:
+
+<Splunk_Server_IP>:9997
+
+Example:
+
+192.168.81.1:9997
+
+This allows the Universal Forwarder to send logs to the Splunk Enterprise server.
+
+Step 4: Verify Installation
+
+Open Command Prompt as Administrator and navigate to:
+
+C:\Program Files\SplunkUniversalForwarder\bin
+
+Run:
+
+splunk status
+
+Expected Output:
+
+splunkd is running
+Outcome
+
+Splunk Universal Forwarder is successfully installed and configured to forward Windows system logs and security events to the Splunk Enterprise server for centralized monitoring and analysis.
