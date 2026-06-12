@@ -1,52 +1,29 @@
-## Splunk Enterprise Installation (Main Windows Machine)
+Splunk Enterprise Installation (Main Windows Machine)
+Step 1: Download Splunk Enterprise
 
-Splunk Enterprise was installed on the main Windows machine and used as the central SIEM platform for the project. It collects, indexes, searches, and analyzes logs received from Ubuntu systems, Windows endpoints, and Suricata IDS through Splunk Universal Forwarders.
+Visit the official Splunk Enterprise download page:
 
-### Installation Steps
+https://www.splunk.com/en_us/download/splunk-enterprise.html
 
-1. Visit the official Splunk Enterprise download page:
-   https://www.splunk.com/en_us/download/splunk-enterprise.html
+Download the Windows 64-bit installer.
 
-2. Download the Windows 64-bit installer.
+note : must and should need to create a account 
 
-3. Run the installer and follow the installation wizard.
+Step 2: Install Splunk Enterprise
+Open the downloaded installer.
+Accept the license agreement.
+Select "Local System" when prompted.
+Create an administrator username and password.
+Click Install.
+Wait for the installation to complete.
+Step 3: Access Splunk
 
-4. Create an administrator username and password during setup.
+Open a web browser and navigate to:
 
-5. Complete the installation and launch Splunk Enterprise.
-
-6. Open Splunk in a web browser:
-
-```text
 http://localhost:8000
-```
 
-7. Log in using the administrator credentials created during installation.
+Log in using the administrator credentials created during installation.
 
-### Configure Splunk Receiving Port
+Outcome
 
-To receive logs from Splunk Universal Forwarders:
-
-1. Navigate to:
-
-```text
-Settings → Forwarding and Receiving
-```
-
-2. Click:
-
-```text
-Configure Receiving
-```
-
-3. Add a new receiving port:
-
-```text
-9997
-```
-
-4. Save the configuration.
-
-### Outcome
-
-After installation and configuration, Splunk Enterprise successfully received logs from Ubuntu systems, Windows endpoints, and Suricata IDS. The platform was used to perform log analysis, create dashboards, investigate alerts, and monitor security events across the SOC lab environment.
+Splunk Enterprise is successfully installed and ready to be configured as the central SIEM server for collecting, monitoring, and analyzing security logs from the SOC lab environment.
