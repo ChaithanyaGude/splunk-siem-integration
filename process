@@ -1,0 +1,87 @@
+# SOC Lab: Splunk SIEM Integration
+
+## Project Setup Process
+
+The first step of this project is installing Splunk Enterprise and Splunk Universal Forwarder on the main Windows laptop. Splunk Enterprise acts as the central SIEM platform that collects, stores, and analyzes security logs from all systems in the lab environment.
+
+After setting up Splunk, a virtual lab environment is created using VMware Workstation. The lab consists of four virtual machines: Kali Linux, Ubuntu Desktop 1, Ubuntu Desktop 2, and Windows 10.
+
+### Virtual Machine Configuration
+
+#### Main Windows Laptop
+
+* Splunk Enterprise
+* Splunk Universal Forwarder
+* Central SIEM Server
+
+#### Kali Linux
+
+* Nmap
+* Hydra
+
+Kali Linux acts as the attacker machine and is used to simulate reconnaissance, scanning, and brute-force attacks against target systems.
+
+#### Ubuntu Desktop 1
+
+* Splunk Universal Forwarder
+
+Ubuntu 1 acts as a monitored Linux endpoint that generates authentication and system logs. These logs are forwarded to Splunk using the Universal Forwarder.
+
+#### Ubuntu Desktop 2
+
+* Splunk Universal Forwarder
+* Suricata IDS
+* Shuffle SOAR
+
+Ubuntu 2 acts as the security monitoring server. Suricata detects suspicious network activities and generates alerts, while Shuffle automates incident response workflows. All generated logs are forwarded to Splunk for analysis.
+
+#### Windows 10
+
+* VirusTotal Integration
+
+Windows 10 acts as an endpoint system that generates Windows security logs and user activity events. VirusTotal can be used during investigations to analyze suspicious files, URLs, hashes, and IP addresses.
+
+---
+
+## Project Workflow
+
+```text
+Kali Linux (Attacker)
+       │
+       ├── Nmap Scan
+       └── Hydra Brute Force
+               │
+               ▼
+Ubuntu 1 & Windows 10
+(Target Systems)
+               │
+               ▼
+Suricata IDS (Ubuntu 2)
+Detects Suspicious Activity
+               │
+               ▼
+Splunk Universal Forwarders
+               │
+               ▼
+Splunk Enterprise (Main Windows)
+Centralized Log Collection
+Monitoring & Analysis
+               │
+               ▼
+Dashboards & Alerts
+               │
+               ▼
+Shuffle SOAR Automation
+               │
+               ▼
+VirusTotal Threat Intelligence
+               │
+               ▼
+SOC Analyst Investigation
+```
+
+---
+
+## Project Objective
+
+The objective of this project is to build a real-world SOC environment for learning security monitoring, threat detection, incident investigation, log analysis, security automation, and threat intelligence integration. The project demonstrates how security teams collect logs, detect attacks, investigate alerts, automate responses, and improve overall security visibility using industry-standard cybersecurity tools.
