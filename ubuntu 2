@@ -1,0 +1,45 @@
+Ubuntu 1 - Splunk Universal Forwarder Setup
+Step 1: Download Splunk Universal Forwarder
+wget -O splunkforwarder-10.2.3-4d61cf8a5c0c-linux-amd64.deb "https://download.splunk.com/products/universalforwarder/releases/10.2.3/linux/splunkforwarder-10.2.3-4d61cf8a5c0c-linux-amd64.deb"
+Wait until the download completes successfully.
+________________________________________
+Step 2: Install Splunk Universal Forwarder
+sudo dpkg -i splunkforwarder-10.2.3-4d61cf8a5c0c-linux-amd64.deb
+________________________________________
+Step 3: Start Splunk Universal Forwarder
+sudo /opt/splunkforwarder/bin/splunk start --accept-license
+Create the following credentials during setup:
+Username: chaitu
+Password: 10100606
+________________________________________
+Step 4: Connect Forwarder to Splunk Server
+sudo /opt/splunkforwarder/bin/splunk add forward-server 192.168.81.1:9997
+Replace the IP address with your Splunk Server IP if different.
+________________________________________
+Step 5: Enable Boot Start
+sudo /opt/splunkforwarder/bin/splunk enable boot-start
+________________________________________
+Step 6: Add Linux Log Files
+Monitor Authentication Logs:
+sudo /opt/splunkforwarder/bin/splunk add monitor /var/log/auth.log
+Monitor System Logs:
+sudo /opt/splunkforwarder/bin/splunk add monitor /var/log/syslog
+________________________________________
+Step 7: Restart Forwarder
+sudo /opt/splunkforwarder/bin/splunk restart
+________________________________________
+Step 8: Verify Forwarder Status
+sudo /opt/splunkforwarder/bin/splunk status
+Expected Output:
+splunkd is running
+________________________________________
+Step 9: Verify Logs in Splunk
+Open Splunk:
+http://localhost:8000
+Run the following search:
+index=* | stats count by host
+The Ubuntu host should appear in the search results.
+________________________________________
+Purpose of Ubuntu 1
+Ubuntu 1 acts as a monitored Linux endpoint in the SOC Lab. It generates authentication logs, system logs, SSH login events, failed login attempts, and user activity logs. These logs are forwarded to Splunk SIEM using Splunk Universal Forwarder, allowing centralized monitoring, analysis, dashboard creation, and alert generation.
+
