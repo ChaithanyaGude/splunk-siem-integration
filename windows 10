@@ -1,0 +1,35 @@
+Windows 10 - VirusTotal Integration
+Windows 10 Setup
+Windows 10 is used as an endpoint system in the SOC Lab environment. It generates Windows security events and user activities that can be 
+investigated during security monitoring and incident response activities.
+________________________________________
+VirusTotal Integration
+VirusTotal is used as a threat intelligence platform to analyze suspicious files, URLs, IP addresses, domains, and file hashes. During investigations,
+suspicious indicators can be checked against VirusTotal's database to determine whether they are malicious or associated with known threats.
+Website:
+https://www.virustotal.com/
+________________________________________
+How It Helps in This Project
+•	Analyze suspicious files and file hashes
+•	Check malicious URLs and domains
+•	Verify suspicious IP addresses
+•	Enrich security alerts with threat intelligence
+•	Support incident investigation and threat hunting
+•	Improve decision-making during alert analysis
+________________________________________
+Investigation Workflow
+Security Alert
+       ↓
+SOC Analyst Investigation
+       ↓
+Extract File Hash / IP / URL
+       ↓
+VirusTotal Lookup
+       ↓
+Threat Intelligence Results
+       ↓
+Malicious or Benign Decision
+________________________________________
+Purpose of Windows 10
+Windows 10 acts as an endpoint machine within the SOC Lab. During investigations, VirusTotal is used to analyze suspicious indicators and provide additional threat intelligence that helps identify potential security threats and improve incident response activities.
+
