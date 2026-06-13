@@ -1,45 +1,77 @@
-Ubuntu 1 - Splunk Universal Forwarder Setup
-Step 1: Download Splunk Universal Forwarder
-wget -O splunkforwarder-10.2.3-4d61cf8a5c0c-linux-amd64.deb "https://download.splunk.com/products/universalforwarder/releases/10.2.3/linux/splunkforwarder-10.2.3-4d61cf8a5c0c-linux-amd64.deb"
-Wait until the download completes successfully.
+Ubuntu 2 - Suricata IDS and Splunk Universal Forwarder Setup
+Step 1: Update Packages
+sudo apt update
 ________________________________________
-Step 2: Install Splunk Universal Forwarder
-sudo dpkg -i splunkforwarder-10.2.3-4d61cf8a5c0c-linux-amd64.deb
+Step 2: Install Suricata IDS
+sudo apt install suricata -y
+Wait until the installation completes.
 ________________________________________
-Step 3: Start Splunk Universal Forwarder
+Step 3: Verify Installation
+suricata --version
+Expected Output:
+Suricata version information
+________________________________________
+Step 4: Start Suricata
+sudo systemctl start suricata
+________________________________________
+Step 5: Enable Auto Start
+sudo systemctl enable suricata
+________________________________________
+Step 6: Verify Status
+sudo systemctl status suricata
+Expected Output:
+active (running)
+________________________________________
+Step 7: Verify Suricata Logs
+ls /var/log/suricata/
+Expected Output:
+eve.json
+fast.log
+suricata.log
+________________________________________
+Step 8: Download Splunk Universal Forwarder
+wget -O splunkforwarder.deb "https://download.splunk.com/products/universalforwarder/releases/10.2.3/linux/splunkforwarder-10.2.3-4d61cf8a5c0c-linux-amd64.deb"
+________________________________________
+Step 9: Install Splunk Universal Forwarder
+sudo dpkg -i splunkforwarder.deb
+________________________________________
+Step 10: Start Splunk Universal Forwarder
 sudo /opt/splunkforwarder/bin/splunk start --accept-license
-Create the following credentials during setup:
-Username: chaitu
-Password: 10100606
+Create credentials:
+Username: ********
+Password: ********
 ________________________________________
-Step 4: Connect Forwarder to Splunk Server
+Step 11: Connect Forwarder to Splunk Server
 sudo /opt/splunkforwarder/bin/splunk add forward-server 192.168.81.1:9997
 Replace the IP address with your Splunk Server IP if different.
 ________________________________________
-Step 5: Enable Boot Start
+Step 12: Enable Boot Start
 sudo /opt/splunkforwarder/bin/splunk enable boot-start
 ________________________________________
-Step 6: Add Linux Log Files
-Monitor Authentication Logs:
-sudo /opt/splunkforwarder/bin/splunk add monitor /var/log/auth.log
-Monitor System Logs:
-sudo /opt/splunkforwarder/bin/splunk add monitor /var/log/syslog
+Step 13: Add Suricata Log Monitoring
+sudo /opt/splunkforwarder/bin/splunk add monitor /var/log/suricata/eve.json
+sudo /opt/splunkforwarder/bin/splunk add monitor /var/log/suricata/fast.log
 ________________________________________
-Step 7: Restart Forwarder
+Step 14: Restart Forwarder
 sudo /opt/splunkforwarder/bin/splunk restart
 ________________________________________
-Step 8: Verify Forwarder Status
-sudo /opt/splunkforwarder/bin/splunk status
-Expected Output:
-splunkd is running
-________________________________________
-Step 9: Verify Logs in Splunk
+Step 15: Verify Suricata Logs in Splunk
 Open Splunk:
 http://localhost:8000
-Run the following search:
-index=* | stats count by host
-The Ubuntu host should appear in the search results.
+Search:
+source="/var/log/suricata/eve.json"
+or
+suricata
 ________________________________________
-Purpose of Ubuntu 1
-Ubuntu 1 acts as a monitored Linux endpoint in the SOC Lab. It generates authentication logs, system logs, SSH login events, failed login attempts, and user activity logs. These logs are forwarded to Splunk SIEM using Splunk Universal Forwarder, allowing centralized monitoring, analysis, dashboard creation, and alert generation.
+Attack Simulation
+From Kali Linux:
+Port Scan:
+nmap <ubuntu2-ip>
+Aggressive Scan:
+nmap -A <ubuntu2-ip>
+Brute Force Attack:
+hydra -l admin -P /usr/share/wordlists/rockyou.txt ssh://<ubuntu2-ip>
+________________________________________
+Purpose of Ubuntu 2
+Ubuntu 2 acts as the Security Monitoring Server in the SOC Lab. It hosts Suricata IDS for network threat detection and Splunk Universal Forwarder for log forwarding. Suricata generates security alerts and network activity logs, which are forwarded to Splunk SIEM for centralized monitoring, investigation, dashboard creation, and threat detection.
 
