@@ -31,5 +31,6 @@ Threat Intelligence Results
 Malicious or Benign Decision
 ________________________________________
 Purpose of Windows 10
-Windows 10 acts as an endpoint machine within the SOC Lab. During investigations, VirusTotal is used to analyze suspicious indicators and provide additional threat intelligence that helps identify potential security threats and improve incident response activities.
+Windows 10 acts as an endpoint machine within the SOC Lab. During investigations, VirusTotal is used to analyze suspicious indicators and 
+provide additional threat intelligence that helps identify potential security threats and improve incident response activities.
 
