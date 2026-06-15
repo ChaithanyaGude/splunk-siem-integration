@@ -1,0 +1,122 @@
+Shuffle SOAR Installation (Ubuntu 2)
+Prerequisites
+Before installing Shuffle, ensure the following components are working correctly:
+•	Splunk Enterprise
+•	Ubuntu 1 Splunk Universal Forwarder
+•	Ubuntu 2 Splunk Universal Forwarder
+•	Suricata IDS
+•	Suricata logs visible in Splunk
+________________________________________
+Step 1: Update Ubuntu
+sudo apt update
+sudo apt upgrade -y
+________________________________________
+Step 2: Install Docker
+sudo apt install docker.io -y
+Verify installation:
+docker --version
+Expected Output:
+Docker version xx.xx.xx
+________________________________________
+Step 3: Enable and Start Docker
+sudo systemctl enable docker
+sudo systemctl start docker
+Verify Docker status:
+sudo systemctl status docker
+Expected Output:
+active (running)
+________________________________________
+Step 4: Install Git
+sudo apt install git -y
+Verify:
+git --version
+________________________________________
+Step 5: Install Docker Compose Plugin
+sudo apt update
+sudo apt install docker-compose-v2 -y
+Verify:
+docker compose version
+Expected Output:
+Docker Compose version v2.x.x
+________________________________________
+Step 6: Download Shuffle
+git clone https://github.com/Shuffle/Shuffle.git
+Move into the project directory:
+cd Shuffle
+________________________________________
+Step 7: Verify Docker Compose File
+Check the contents:
+ls -la
+Verify that one of the following files exists:
+docker-compose.yml
+or
+compose.yaml
+________________________________________
+Step 8: Start Shuffle
+Run:
+sudo docker compose up -d
+Wait several minutes while Docker downloads and creates all required containers.
+________________________________________
+Step 9: Verify Running Containers
+sudo docker ps
+You should see multiple Shuffle containers running.
+________________________________________
+Step 10: Find Ubuntu 2 IP Address
+ip a
+Example:
+192.168.81.145
+________________________________________
+Step 11: Access Shuffle
+Open a web browser and visit:
+http://<ubuntu2-ip>:3001
+Example:
+http://192.168.81.145:3001
+Or locally:
+http://localhost:3001
+________________________________________
+Step 12: Create Administrator Account
+1.	Open the Shuffle web interface.
+2.	Create an administrator account.
+3.	Log in.
+4.	Access the Shuffle Dashboard.
+________________________________________
+Troubleshooting
+Error: docker: unknown command: compose
+Install Docker Compose Plugin:
+sudo apt install docker-compose-v2 -y
+Verify:
+docker compose version
+________________________________________
+Error: docker-compose: command not found
+Ubuntu uses Docker Compose v2.
+Use:
+docker compose up -d
+Instead of:
+docker-compose up -d
+________________________________________
+Error: No Compose File Found
+Verify you are inside the Shuffle directory:
+cd ~/Shuffle
+ls -la
+Ensure one of these files exists:
+docker-compose.yml
+compose.yaml
+________________________________________
+Error: Docker Not Running
+Start Docker:
+sudo systemctl start docker
+Verify:
+sudo systemctl status docker
+________________________________________
+Installation Verification
+Open:
+http://<ubuntu2-ip>:3001
+If the Shuffle login page appears, the installation is successful.
+________________________________________
+Purpose of Shuffle in This Project
+
+Shuffle is used as the SOAR (Security Orchestration, Automation, and Response) platform.
+It automates security workflows, processes Splunk alerts
+enriches incidents using threat intelligence sources such as VirusTotal
+and helps reduce manual effort during incident response activities.
+
