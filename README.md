@@ -10,7 +10,8 @@ The objective of this project is to gain hands-on experience with SOC operations
 
 ## SOC Lab Architecture
 
-![SOC Lab Architecture](./images/1000135566.jpg)
+
+![SOC Lab Architecture](./images/soc-lab-architecture.jpeg)
 
 ---
 
