@@ -10,9 +10,7 @@ The objective of this project is to gain hands-on experience with SOC operations
 
 ## SOC Lab Architecture
 
-<p align="center">
-  <img src="images/soc-lab-architecture.png" alt="SOC Lab Architecture" width="900">
-</p>
+![SOC Lab Architecture](./images/1000135566.jpg)
 
 ---
 
@@ -113,13 +111,4 @@ SOC Analyst Investigation
 - Blue Team Methodologies
 
 ---
-
-## Future Enhancements
-
-- Sysmon Integration
-- Active Directory Monitoring
-- Wazuh Integration
-- MITRE ATT&CK Mapping
-- Sigma Rule Development
-- Advanced Threat Hunting Dashboards
 
