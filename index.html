@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOCShield X — Open-Source Security Operations Center</title>
+<meta name="description" content="SOCShield X — an open-source SOC lab pairing Splunk, Suricata, Shuffle SOAR and VirusTotal for end-to-end threat detection, incident response and security automation.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%234C8DFF' d='M12 2l8 3.2v6c0 5.2-3.4 9.3-8 11-4.6-1.7-8-5.8-8-11v-6z'/%3E%3Cpath fill='none' stroke='%230A0E18' stroke-width='1.8' d='M8.5 12l2.3 2.3L16 9.5'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E18;
+    --bg-elev:#10172A;
+    --bg-elev-2:#141D33;
+    --glass:rgba(255,255,255,0.045);
+    --glass-strong:rgba(255,255,255,0.08);
+    --border:rgba(255,255,255,0.10);
+    --border-soft:rgba(255,255,255,0.06);
+
+    --blue:#4C8DFF;
+    --blue-dim:#2F5FCC;
+    --purple:#9B6BFF;
+    --purple-dim:#7048CC;
+    --orange:#FF8A3D;
+    --orange-dim:#E06A1E;
+
+    --text:#E9ECF6;
+    --text-muted:#8B93AD;
+    --text-dim:#525C78;
+
+    --font-display:'JetBrains Mono', ui-monospace, monospace;
+    --font-body:'Inter', system-ui, sans-serif;
+
+    --radius:18px;
+    --radius-sm:11px;
+    --container:1180px;
+  }
+
+  /* ---- light mode overrides ---- */
+  html.light{
+    --bg:#F0F2F8;
+    --bg-elev:#FFFFFF;
+    --bg-elev-2:#E8EBF4;
+    --glass:rgba(0,0,0,0.04);
+    --glass-strong:rgba(0,0,0,0.07);
+    --border:rgba(0,0,0,0.10);
+    --border-soft:rgba(0,0,0,0.07);
+
+    --blue:#2563EB;
+    --blue-dim:#1D4ED8;
+    --purple:#7C3AED;
+    --purple-dim:#6D28D9;
+    --orange:#EA6A10;
+    --orange-dim:#C2560C;
+
+    --text:#0F1629;
+    --text-muted:#445070;
+    --text-dim:#8896B8;
+  }
+  html.light .bg-fx{
+    background:
+      radial-gradient(ellipse 900px 600px at 78% -8%, rgba(37,99,235,0.10), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 8% 18%, rgba(124,58,237,0.08), transparent 60%),
+      radial-gradient(ellipse 600px 500px at 90% 70%, rgba(234,106,16,0.05), transparent 60%);
+  }
+  html.light .bg-grid{
+    background-image:
+      linear-gradient(rgba(0,0,0,0.05) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,0,0,0.05) 1px,transparent 1px);
+    background-size:46px 46px;
+  }
+  html.light .nav{background:rgba(240,242,248,0.82);}
+
+  /* toggle button */
+  .theme-toggle{
+    width:38px;height:38px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--glass);border:1px solid var(--border);
+    cursor:pointer;transition:background .2s,border-color .2s,transform .2s;
+    color:var(--text-muted);flex-shrink:0;
+  }
+  .theme-toggle:hover{background:var(--glass-strong);border-color:var(--blue);transform:scale(1.07);}
+  .theme-toggle svg{width:17px;height:17px;transition:opacity .2s;}
+  .theme-toggle .icon-moon{display:block;}
+  .theme-toggle .icon-sun{display:none;}
+  html.light .theme-toggle .icon-moon{display:none;}
+  html.light .theme-toggle .icon-sun{display:block;}
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  img,svg{display:block;max-width:100%;}
+  a{color:inherit;text-decoration:none;}
+  ul{list-style:none;margin:0;padding:0;}
+  h1,h2,h3,p{margin:0;}
+  button{font:inherit;cursor:pointer;}
+
+  ::selection{background:var(--purple);color:#fff;}
+
+  :focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:4px;}
+
+  .wrap{max-width:var(--container);margin:0 auto;padding:0 28px;}
+
+  .eyebrow{
+    font-family:var(--font-display);
+    font-size:12.5px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--blue);
+    font-weight:600;
+    display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{
+    content:'';
+    width:18px;height:1px;
+    background:var(--blue);
+    display:inline-block;
+  }
+
+  /* ---------------- background atmosphere ---------------- */
+  .bg-fx{
+    position:fixed;inset:0;
+    z-index:0;
+    pointer-events:none;
+    background:
+      radial-gradient(ellipse 900px 600px at 78% -8%, rgba(76,141,255,0.16), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 8% 18%, rgba(155,107,255,0.13), transparent 60%),
+      radial-gradient(ellipse 600px 500px at 90% 70%, rgba(255,138,61,0.07), transparent 60%);
+  }
+  .bg-grid{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size:46px 46px;
+    mask-image:radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 90%);
+  }
+
+  /* ---------------- nav ---------------- */
+  .nav{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(14px) saturate(140%);
+    -webkit-backdrop-filter:blur(14px) saturate(140%);
+    background:rgba(10,14,24,0.72);
+    border-bottom:1px solid var(--border-soft);
+  }
+  .nav-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    height:72px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:17px;letter-spacing:.01em;}
+  .brand-mark{
+    width:32px;height:32px;border-radius:9px;
+    background:linear-gradient(135deg, var(--blue), var(--purple));
+    display:flex;align-items:center;justify-content:center;
+    color:#0A0E18;
+    box-shadow:0 0 22px rgba(76,141,255,0.45);
+  }
+  .brand-mark svg{width:18px;height:18px;}
+  .brand .x{color:var(--orange);}
+
+  .nav-links{display:flex;align-items:center;gap:34px;}
+  .nav-links a{
+    font-size:14px;color:var(--text-muted);font-weight:500;
+    transition:color .2s ease;
+  }
+  .nav-links a:hover{color:var(--text);}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--font-display);
+    font-size:13px;font-weight:600;letter-spacing:.02em;
+    padding:11px 20px;border-radius:10px;
+    border:1px solid var(--border);
+    transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    white-space:nowrap;
+  }
+  .btn svg{width:15px;height:15px;}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--blue), var(--purple-dim));
+    border-color:transparent;
+    color:#fff;
+    box-shadow:0 8px 24px -8px rgba(76,141,255,0.6);
+  }
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 28px -8px rgba(76,141,255,0.75);}
+  .btn-ghost{
+    background:var(--glass);
+    color:var(--text);
+  }
+  .btn-ghost:hover{border-color:var(--blue);background:var(--glass-strong);transform:translateY(-2px);}
+
+  .nav-cta{display:flex;align-items:center;gap:12px;}
+  .nav-links-mobile-hide{display:flex;}
+
+  /* ---------------- hero ---------------- */
+  .hero{
+    position:relative;z-index:1;
+    padding:96px 0 70px;
+  }
+  .hero-grid{
+    display:grid;
+    grid-template-columns:0.82fr 1.18fr;
+    gap:40px;
+    align-items:center;
+  }
+  .hero-copy h1{
+    font-family:var(--font-display);
+    font-weight:800;
+    font-size:clamp(34px, 4.4vw, 54px);
+    line-height:1.06;
+    letter-spacing:-0.01em;
+    margin:18px 0 20px;
+  }
+  .hero-copy h1 .accent{
+    background:linear-gradient(90deg, var(--blue), var(--purple) 60%, var(--orange));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .hero-copy p.tagline{
+    font-size:16.5px;
+    line-height:1.65;
+    color:var(--text-muted);
+    max-width:520px;
+  }
+  .hero-actions{
+    display:flex;gap:14px;margin-top:32px;flex-wrap:wrap;
+  }
+
+  .hero-stats{
+    display:flex;gap:28px;margin-top:40px;flex-wrap:wrap;
+  }
+  .stat .num{
+    font-family:var(--font-display);font-weight:700;font-size:21px;color:var(--text);
+    font-variant-numeric:tabular-nums;
+  }
+  .stat .lbl{font-size:11.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}
+
+  .terminal{
+    margin-top:34px;
+    background:var(--bg-elev);
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius-sm);
+    overflow:hidden;
+    max-width:540px;
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;
+    padding:10px 14px;
+    border-bottom:1px solid var(--border-soft);
+    background:rgba(255,255,255,0.02);
+  }
+  .terminal-bar span{width:9px;height:9px;border-radius:50%;}
+  .terminal-bar span:nth-child(1){background:#FF6259;}
+  .terminal-bar span:nth-child(2){background:#FFBD2E;}
+  .terminal-bar span:nth-child(3){background:#28C940;}
+  .terminal-bar .tlabel{
+    margin-left:8px;font-family:var(--font-display);font-size:11px;color:var(--text-dim);
+  }
+  .terminal-body{
+    height:128px;overflow:hidden;position:relative;
+    font-family:var(--font-display);font-size:12.5px;line-height:1.95;
+    padding:10px 16px;
+  }
+  .terminal-scroll{
+    animation:scrollLog 14s linear infinite;
+  }
+  .terminal-scroll p{margin:0;color:var(--text-muted);white-space:nowrap;}
+  .terminal-scroll .tag-suricata{color:var(--orange);}
+  .terminal-scroll .tag-shuffle{color:var(--purple);}
+  .terminal-scroll .tag-vt{color:var(--blue);}
+  .terminal-scroll .tag-splunk{color:var(--blue);}
+  .terminal-scroll .tag-hydra{color:var(--orange);}
+  @keyframes scrollLog{
+    0%{transform:translateY(0);}
+    100%{transform:translateY(-50%);}
+  }
+
+  /* ---------------- hero diagram ---------------- */
+  .hero-diagram{
+    position:relative;
+    display:flex;justify-content:center;
+  }
+  .hero-diagram svg{width:100%;max-width:560px;height:auto;overflow:visible;}
+
+  .node-bg{fill:var(--glass);stroke:var(--border);stroke-width:1.2;transition:filter .25s ease, stroke .25s ease;}
+  .node-icon{color:var(--text-muted);}
+  .node-label{font-family:var(--font-body);font-weight:600;font-size:13px;fill:var(--text);}
+  .node-tag{font-family:var(--font-display);font-size:8.5px;letter-spacing:.1em;fill:var(--text-dim);text-transform:uppercase;}
+
+  .node--endpoint .node-bg{stroke:rgba(155,107,255,0.45);}
+  .node--endpoint .node-icon{color:var(--purple);}
+  .node--endpoint .node-tag{fill:var(--purple);}
+
+  .node--infra .node-bg{stroke:rgba(76,141,255,0.45);}
+  .node--infra .node-icon{color:var(--blue);}
+  .node--infra .node-tag{fill:var(--blue);}
+
+  .node--tool .node-bg{stroke:rgba(255,138,61,0.5);}
+  .node--tool .node-icon{color:var(--orange);}
+  .node--tool .node-tag{fill:var(--orange);}
+
+  .node--tool .node-bg{animation:toolGlow 3.2s ease-in-out infinite;}
+  @keyframes toolGlow{
+    0%,100%{filter:drop-shadow(0 0 0px rgba(255,138,61,0));}
+    50%{filter:drop-shadow(0 0 11px rgba(255,138,61,0.55));}
+  }
+
+  .flow-line{stroke:var(--border);stroke-width:1.6;fill:none;}
+  .pulse{filter:drop-shadow(0 0 5px currentColor);}
+
+  /* clickable nodes in architecture section */
+  .node{cursor:pointer;transition:transform .25s ease;transform-box:fill-box;transform-origin:center;}
+  .node:hover, .node:focus-visible{transform:scale(1.045);}
+  .node:hover .node-bg, .node:focus-visible .node-bg{stroke-width:1.8;}
+  .node.is-active .node-bg{stroke-width:2.2;}
+  .node--endpoint.is-active .node-bg, .node--endpoint:hover .node-bg{filter:drop-shadow(0 0 14px rgba(155,107,255,0.55));}
+  .node--infra.is-active .node-bg, .node--infra:hover .node-bg{filter:drop-shadow(0 0 14px rgba(76,141,255,0.55));}
+  .node--tool.is-active .node-bg{filter:drop-shadow(0 0 16px rgba(255,138,61,0.75));}
+
+  /* ---------------- section shells ---------------- */
+  section{position:relative;z-index:1;}
+  .section-head{max-width:680px;margin-bottom:44px;}
+  .section-head h2{
+    font-family:var(--font-display);font-weight:700;
+    font-size:clamp(26px,3vw,36px);
+    margin-top:14px;letter-spacing:-0.01em;
+  }
+  .section-head p{margin-top:14px;color:var(--text-muted);font-size:15.5px;line-height:1.7;}
+
+  .arch-section{padding:90px 0 60px;border-top:1px solid var(--border-soft);}
+
+  .pipeline-steps{
+    display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;
+    font-family:var(--font-display);font-size:12.5px;color:var(--text-muted);
+  }
+  .pipeline-steps li{
+    display:flex;align-items:center;gap:8px;
+    background:var(--glass);border:1px solid var(--border-soft);
+    padding:7px 13px 7px 9px;border-radius:999px;
+  }
+  .pipeline-steps li b{
+    color:var(--bg);background:var(--blue);
+    width:18px;height:18px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:10px;font-weight:700;
+  }
+  .pipeline-steps li::after{content:'→';color:var(--text-dim);margin-left:4px;}
+  .pipeline-steps li:last-child::after{content:'';margin:0;}
+
+  .arch-grid{
+    display:grid;grid-template-columns:1.55fr 1fr;
+    gap:30px;margin-top:50px;align-items:start;
+  }
+  .diagram-card{
+    background:var(--bg-elev);
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius);
+    padding:26px;
+    overflow-x:auto;
+  }
+  .diagram-card svg{min-width:760px;width:100%;height:auto;}
+
+  .panel-card{
+    background:var(--bg-elev);
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius);
+    padding:28px;
+    position:sticky;top:96px;
+    min-height:420px;
+  }
+  .panel-eyebrow{
+    display:inline-flex;align-items:center;gap:7px;
+    font-family:var(--font-display);font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;font-weight:700;
+    padding:5px 11px;border-radius:999px;
+    background:rgba(76,141,255,0.12);color:var(--blue);
+    border:1px solid rgba(76,141,255,0.3);
+  }
+  .panel-eyebrow.cat-endpoint{background:rgba(155,107,255,0.13);color:var(--purple);border-color:rgba(155,107,255,0.32);}
+  .panel-eyebrow.cat-tool{background:rgba(255,138,61,0.13);color:var(--orange);border-color:rgba(255,138,61,0.32);}
+
+  .panel-card h3{font-family:var(--font-display);font-size:21px;margin-top:16px;}
+  .panel-card .panel-desc{margin-top:12px;color:var(--text-muted);font-size:14.5px;line-height:1.75;}
+  .panel-card .panel-stage{
+    margin-top:20px;padding-top:18px;border-top:1px solid var(--border-soft);
+    font-family:var(--font-display);font-size:11.5px;color:var(--text-dim);
+  }
+  .panel-card .panel-stage b{color:var(--text-muted);}
+
+  .panel-default ol{
+    margin:16px 0 0;padding-left:18px;color:var(--text-muted);font-size:14px;line-height:2;
+  }
+  .panel-default ol li b{color:var(--text);font-weight:600;}
+  .panel-hint{margin-top:22px;font-size:12.5px;color:var(--text-dim);font-style:italic;}
+
+  /* legend */
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:24px;font-size:12.5px;color:var(--text-muted);}
+  .legend span{display:inline-flex;align-items:center;gap:7px;}
+  .legend i{width:9px;height:9px;border-radius:2px;display:inline-block;}
+
+  /* ---------------- tools grid ---------------- */
+  .tools-section{padding:90px 0 100px;border-top:1px solid var(--border-soft);}
+  .tools-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:46px;
+  }
+  .tool-card{
+    background:var(--bg-elev);border:1px solid var(--border-soft);
+    border-radius:var(--radius);padding:24px;
+    transition:transform .25s ease, border-color .25s ease, background .25s ease;
+  }
+  .tool-card:hover{transform:translateY(-5px);background:var(--bg-elev-2);}
+  .tool-icon{
+    width:42px;height:42px;border-radius:11px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--glass);border:1px solid var(--border-soft);
+    margin-bottom:16px;
+  }
+  .tool-icon svg{width:21px;height:21px;}
+  .tool-card.cat-infra:hover{border-color:rgba(76,141,255,0.5);}
+  .tool-card.cat-infra .tool-icon{color:var(--blue);}
+  .tool-card.cat-tool:hover{border-color:rgba(255,138,61,0.5);}
+  .tool-card.cat-tool .tool-icon{color:var(--orange);}
+  .tool-card h4{font-family:var(--font-display);font-size:16px;font-weight:700;}
+  .tool-card .role{
+    font-family:var(--font-display);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--text-dim);margin-top:5px;
+  }
+  .tool-card p{margin-top:12px;font-size:13.8px;line-height:1.65;color:var(--text-muted);}
+
+  /* ---------------- footer ---------------- */
+  .footer{
+    border-top:1px solid var(--border-soft);
+    padding:46px 0;position:relative;z-index:1;
+  }
+  .footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;}
+  .footer-status{display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-size:12px;color:var(--text-dim);}
+  .dot-pulse{
+    width:7px;height:7px;border-radius:50%;background:var(--blue);
+    box-shadow:0 0 0 0 rgba(76,141,255,0.6);
+    animation:dotPulse 2s infinite;
+  }
+  @keyframes dotPulse{
+    0%{box-shadow:0 0 0 0 rgba(76,141,255,0.55);}
+    70%{box-shadow:0 0 0 8px rgba(76,141,255,0);}
+    100%{box-shadow:0 0 0 0 rgba(76,141,255,0);}
+  }
+  .footer-links{display:flex;gap:24px;font-size:13.5px;color:var(--text-muted);}
+  .footer-links a:hover{color:var(--text);}
+
+  /* ---------------- responsive ---------------- */
+  @media (max-width:980px){
+    .hero-grid{grid-template-columns:1fr;}
+    .hero-diagram{order:-1;margin-bottom:10px;}
+    .hero-diagram svg{max-width:300px;}
+    .arch-grid{grid-template-columns:1fr;}
+    .panel-card{position:static;}
+    .tools-grid{grid-template-columns:repeat(2,1fr);}
+    .nav-links-mobile-hide{display:none;}
+  }
+  @media (max-width:560px){
+    .tools-grid{grid-template-columns:1fr;}
+    .hero-actions{flex-direction:column;align-items:stretch;}
+    .hero-stats{gap:20px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important;animation-iteration-count:1 !important;transition-duration:0.001ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-fx"></div>
+<div class="bg-grid"></div>
+
+<!-- ============ ICON DEFINITIONS ============ -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2l8 3.2v6c0 5.2-3.4 9.3-8 11-4.6-1.7-8-5.8-8-11v-6z"/><path d="M8.5 12l2.3 2.3L16 9.5"/>
+    </symbol>
+    <symbol id="i-desktop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>
+    </symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9.5l3 2.5-3 2.5M13 15.5h4"/>
+    </symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7.5" height="7.5" rx="1"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1"/>
+      <rect x="3" y="13.5" width="7.5" height="7.5" rx="1"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1"/>
+    </symbol>
+    <symbol id="i-log" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 2.5h8.5L19 7v14.5H6z"/><path d="M14.5 2.5V7H19M9 12.5h6M9 16h6M9 9h2"/>
+    </symbol>
+    <symbol id="i-waves" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0M4.3 12a7.7 7.7 0 0 1 15.4 0"/>
+    </symbol>
+    <symbol id="i-radar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="12" r="8.3"/><circle cx="11" cy="12" r="4.4"/><path d="M11 12L19 5.2"/><circle cx="11" cy="12" r="1.1" fill="currentColor" stroke="none"/>
+    </symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="10" cy="12" r="7.7"/><path d="M2.3 12h15.4M10 4.3a11 11 0 0 1 0 15.4M10 4.3a11 11 0 0 0 0 15.4"/>
+      <path d="M14.5 14.5l2.2 2.2 4.3-5" stroke-width="1.8"/>
+    </symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <path d="M13.2 2L4.4 14h6.6l-1 8 9.6-13.5h-6.7z"/>
+    </symbol>
+    <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="7.2" cy="14.2" r="4.2"/><path d="M10.3 11.1L20 1.4M15.3 5.4l3 3M18.3 2.4l3 3"/>
+    </symbol>
+    <symbol id="i-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="7" rx="1.6"/><rect x="3" y="14" width="18" height="7" rx="1.6"/>
+      <circle cx="7" cy="6.5" r="1" fill="currentColor" stroke="none"/><circle cx="7" cy="17.5" r="1" fill="currentColor" stroke="none"/>
+    </symbol>
+    <symbol id="i-dashboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="14.5" rx="2"/><path d="M7 13.5v-3.2M12 13.5V7M17 13.5V9M7 20.5h10"/>
+    </symbol>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--text-dim)"/>
+    </marker>
+  </defs>
+</svg>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a href="#top" class="brand">
+      <span class="brand-mark"><svg viewBox="0 0 24 24"><use href="#i-shield"/></svg></span>
+      SOCShield <span class="x">X</span>
+    </a>
+    <nav class="nav-links nav-links-mobile-hide">
+      <a href="#architecture">Architecture</a>
+      <a href="#tools">Tools</a>
+    </nav>
+    <div class="nav-cta">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
+        <!-- moon = dark mode active -->
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/>
+        </svg>
+        <!-- sun = light mode active -->
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </button>
+      <a class="btn btn-primary" href="https://github.com/ChaithanyaGude/splunk-siem-integration" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.72-2.78.62-3.37-1.36-3.37-1.36-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.74 0 0 .84-.279 2.75 1.05A9.3 9.3 0 0112 6.84c.85.004 1.71.118 2.51.347 1.9-1.33 2.74-1.05 2.74-1.05.55 1.43.2 2.48.1 2.74.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.81 0 .27.18.6.69.49A10.27 10.27 0 0022 12.25C22 6.58 17.52 2 12 2z"/></svg>
+        View Source Code
+      </a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">SECURITY OPERATIONS, SELF-HOSTED</p>
+        <h1>SOC<span class="accent">Shield X</span></h1>
+        <p class="tagline">Open-source Security Operations Center for threat detection, incident response, and security automation.</p>
+
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="https://github.com/ChaithanyaGude/splunk-siem-integration" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.72-2.78.62-3.37-1.36-3.37-1.36-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.74 0 0 .84-.27 2.75 1.05A9.3 9.3 0 0112 6.84c.85.004 1.71.118 2.51.347 1.9-1.33 2.74-1.05 2.74-1.05.55 1.43.2 2.48.1 2.74.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.81 0 .27.18.6.69.49A10.27 10.27 0 0022 12.25C22 6.58 17.52 2 12 2z"/></svg>
+            View Source Code
+          </a>
+          <a class="btn btn-ghost" href="#architecture">
+            Explore the Pipeline
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+
+
+      </div>
+
+      <div class="hero-diagram">
+        <!-- Architecture SVG matching the SOC lab image layout:
+             Splunk (left) ↔ Forwarder (center-left) ↔ [Isolated VM box + tool rows] (right) -->
+        <svg viewBox="0 0 590 530" role="img" aria-label="SOCShield X lab architecture">
+
+          <!-- Outer environment border (pink/purple dashed, like the image) -->
+          <rect x="3" y="3" width="584" height="524" rx="20" fill="none"
+                stroke="rgba(155,107,255,0.5)" stroke-width="1.4" stroke-dasharray="4 8"/>
+          <text x="295" y="23" text-anchor="middle"
+                font-family="var(--font-display)" font-size="10" letter-spacing="2.5"
+                fill="rgba(155,107,255,0.7)">MAIN SOC LAB ENVIRONMENT</text>
+
+          <!-- Pulsing online dot -->
+          <circle cx="540" cy="18" r="4" fill="var(--blue)">
+            <animate attributeName="opacity" values="1;0.25;1" dur="2.2s" repeatCount="indefinite"/>
+          </circle>
+          <text x="550" y="22" font-family="var(--font-display)" font-size="9"
+                letter-spacing="1.5" fill="var(--text-dim)">ONLINE</text>
+
+          <!-- ====== LEFT: SPLUNK SIEM ====== -->
+          <g class="node node--infra">
+            <rect class="node-bg" x="10" y="170" width="108" height="118" rx="14"/>
+            <!-- Windows logo (4 squares) -->
+            <rect x="26" y="186" width="10" height="10" rx="1.5" fill="var(--blue)" opacity="0.9"/>
+            <rect x="38" y="186" width="10" height="10" rx="1.5" fill="var(--blue)" opacity="0.9"/>
+            <rect x="26" y="198" width="10" height="10" rx="1.5" fill="var(--blue)" opacity="0.9"/>
+            <rect x="38" y="198" width="10" height="10" rx="1.5" fill="var(--blue)" opacity="0.9"/>
+            <text x="57" y="196" font-family="var(--font-display)" font-size="9"
+                  font-weight="700" fill="var(--text-muted)">MAIN</text>
+            <text x="57" y="208" font-family="var(--font-display)" font-size="9"
+                  font-weight="700" fill="var(--text-muted)">WINDOWS</text>
+            <text x="64" y="256" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="15" font-weight="800" fill="var(--blue)">Splunk</text>
+            <text x="64" y="272" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="8" letter-spacing="1.5" fill="var(--text-dim)">SIEM</text>
+          </g>
+
+          <!-- Bidirectional arrows: Splunk ↔ Forwarder -->
+          <path id="sfa" d="M118,230 L134,230" fill="none" stroke="var(--text-dim)"
+                stroke-width="1.4" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+          <circle r="2.5" fill="var(--blue)">
+            <animateMotion dur="1.6s" begin="0s" repeatCount="indefinite"><mpath href="#sfa"/></animateMotion>
+          </circle>
+
+          <!-- ====== FORWARDER ====== -->
+          <g class="node node--infra">
+            <rect class="node-bg" x="134" y="198" width="84" height="90" rx="13"/>
+            <!-- Server icon simplified -->
+            <rect x="150" y="213" width="36" height="8" rx="2" fill="var(--blue)" opacity="0.25"/>
+            <rect x="150" y="213" width="36" height="8" rx="2" fill="none" stroke="var(--blue)" stroke-width="1.2" opacity="0.7"/>
+            <circle cx="155" cy="217" r="2" fill="var(--blue)" opacity="0.8"/>
+            <rect x="150" y="224" width="36" height="8" rx="2" fill="var(--blue)" opacity="0.12"/>
+            <rect x="150" y="224" width="36" height="8" rx="2" fill="none" stroke="var(--blue)" stroke-width="1.2" opacity="0.5"/>
+            <circle cx="155" cy="228" r="2" fill="var(--blue)" opacity="0.5"/>
+            <!-- shield on forwarder -->
+            <path d="M174 234 l5 2v3.5c0 3-2 5-5 6-3-1-5-3-5-6V236z"
+                  fill="var(--blue)" opacity="0.35" stroke="var(--blue)" stroke-width="1"/>
+            <text x="176" y="268" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="9" font-weight="700" fill="var(--text)">FORWARDER</text>
+            <text x="176" y="280" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="7.5" letter-spacing="1" fill="var(--text-dim)">UNIVERSAL</text>
+          </g>
+
+          <!-- Bidirectional arrows: Forwarder ↔ Right section -->
+          <path id="fra" d="M218,243 L232,243" fill="none" stroke="var(--text-dim)"
+                stroke-width="1.4" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+          <circle r="2.5" fill="var(--blue)">
+            <animateMotion dur="1.6s" begin="0.4s" repeatCount="indefinite"><mpath href="#fra"/></animateMotion>
+          </circle>
+
+          <!-- ====== RIGHT SECTION outer border ====== -->
+          <rect x="232" y="32" width="350" height="488" rx="18"
+                fill="rgba(76,141,255,0.018)" stroke="rgba(155,107,255,0.28)" stroke-width="1.2"/>
+
+          <!-- ISOLATED VM-WARE sub-box -->
+          <rect x="240" y="48" width="334" height="148" rx="13"
+                fill="rgba(255,255,255,0.018)" stroke="rgba(76,141,255,0.32)"
+                stroke-width="1.1" stroke-dasharray="2 5"/>
+          <text x="407" y="65" text-anchor="middle" font-family="var(--font-display)"
+                font-size="8.5" letter-spacing="2" fill="rgba(76,141,255,0.75)">ISOLATED ENVIRONMENT · VM-WARE</text>
+
+          <!-- ---- VM cards (4 in a row) ---- -->
+          <!-- Ubuntu 1 -->
+          <g class="node node--endpoint">
+            <rect class="node-bg" x="248" y="73" width="68" height="110" rx="11"/>
+            <circle cx="282" cy="104" r="17" fill="none" stroke="var(--orange)"
+                    stroke-width="2.2" opacity="0.65"/>
+            <circle cx="282" cy="88"  r="4.5" fill="var(--orange)" opacity="0.8"/>
+            <circle cx="268" cy="111" r="4.5" fill="var(--orange)" opacity="0.8"/>
+            <circle cx="296" cy="111" r="4.5" fill="var(--orange)" opacity="0.8"/>
+            <text x="282" y="142" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="8" font-weight="700" fill="var(--text)">UBUNTU</text>
+            <text x="282" y="154" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="7.5" fill="var(--text-muted)">DESKTOP 1</text>
+          </g>
+          <!-- Ubuntu 2 -->
+          <g class="node node--endpoint">
+            <rect class="node-bg" x="324" y="73" width="68" height="110" rx="11"/>
+            <circle cx="358" cy="104" r="17" fill="none" stroke="var(--orange)"
+                    stroke-width="2.2" opacity="0.65"/>
+            <circle cx="358" cy="88"  r="4.5" fill="var(--orange)" opacity="0.8"/>
+            <circle cx="344" cy="111" r="4.5" fill="var(--orange)" opacity="0.8"/>
+            <circle cx="372" cy="111" r="4.5" fill="var(--orange)" opacity="0.8"/>
+            <text x="358" y="142" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="8" font-weight="700" fill="var(--text)">UBUNTU</text>
+            <text x="358" y="154" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="7.5" fill="var(--text-muted)">DESKTOP 2</text>
+          </g>
+          <!-- Kali Linux -->
+          <g class="node node--endpoint">
+            <rect class="node-bg" x="400" y="73" width="68" height="110" rx="11"/>
+            <circle cx="434" cy="100" r="19" fill="rgba(76,141,255,0.13)"
+                    stroke="var(--blue)" stroke-width="1.6" opacity="0.8"/>
+            <!-- Kali dragon hint: a stylised terminal chevron -->
+            <text x="434" y="107" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="20" font-weight="800" fill="var(--blue)" opacity="0.8">K</text>
+            <text x="434" y="142" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="8" font-weight="700" fill="var(--text)">KALI</text>
+            <text x="434" y="154" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="7.5" fill="var(--text-muted)">LINUX</text>
+          </g>
+          <!-- Windows 10 -->
+          <g class="node node--endpoint">
+            <rect class="node-bg" x="476" y="73" width="68" height="110" rx="11"/>
+            <rect x="497" y="87" width="10" height="10" rx="1.5" fill="var(--blue)" opacity="0.9"/>
+            <rect x="509" y="87" width="10" height="10" rx="1.5" fill="var(--blue)" opacity="0.9"/>
+            <rect x="497" y="99" width="10" height="10" rx="1.5" fill="var(--blue)" opacity="0.9"/>
+            <rect x="509" y="99" width="10" height="10" rx="1.5" fill="var(--blue)" opacity="0.9"/>
+            <text x="510" y="142" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="8" font-weight="700" fill="var(--text)">WINDOWS</text>
+            <text x="510" y="154" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="7.5" fill="var(--text-muted)">10</text>
+          </g>
+
+          <!-- Arrows: VMs → Tool row -->
+          <path id="va1" d="M282,183 L282,222" fill="none" stroke="var(--border)" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <path id="va2" d="M358,183 L358,222" fill="none" stroke="var(--border)" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <path id="va3" d="M434,183 L434,222" fill="none" stroke="var(--border)" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <path id="va4" d="M510,183 L510,222" fill="none" stroke="var(--border)" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <circle r="2.5" fill="var(--purple)"><animateMotion dur="1.5s" begin="0s"   repeatCount="indefinite"><mpath href="#va1"/></animateMotion></circle>
+          <circle r="2.5" fill="var(--purple)"><animateMotion dur="1.5s" begin="0.28s" repeatCount="indefinite"><mpath href="#va2"/></animateMotion></circle>
+          <circle r="2.5" fill="var(--purple)"><animateMotion dur="1.5s" begin="0.56s" repeatCount="indefinite"><mpath href="#va3"/></animateMotion></circle>
+          <circle r="2.5" fill="var(--purple)"><animateMotion dur="1.5s" begin="0.84s" repeatCount="indefinite"><mpath href="#va4"/></animateMotion></circle>
+
+          <!-- ---- Tool row ---- -->
+          <!-- Log Collection -->
+          <g class="node node--infra">
+            <rect class="node-bg" x="248" y="222" width="68" height="98" rx="11"/>
+            <!-- log doc icon -->
+            <rect x="264" y="238" width="22" height="27" rx="3" fill="var(--purple)" opacity="0.25"/>
+            <rect x="264" y="238" width="22" height="27" rx="3" fill="none"
+                  stroke="var(--purple)" stroke-width="1.3" opacity="0.8"/>
+            <text x="275" y="256" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="7" font-weight="700" fill="var(--purple)">LOG</text>
+            <text x="282" y="281" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="8" font-weight="700" fill="var(--text)">LOG</text>
+            <text x="282" y="292" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="7" fill="var(--text-muted)">COLLECTION</text>
+            <text x="282" y="313" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="7" fill="var(--blue)" opacity="0.6">UBUNTU-1</text>
+          </g>
+          <!-- Suricata -->
+          <g class="node node--tool">
+            <rect class="node-bg" x="324" y="222" width="68" height="98" rx="11"/>
+            <!-- meerkat-like: a simple eye/wave icon suggestion -->
+            <ellipse cx="358" cy="252" rx="13" ry="9" fill="none"
+                     stroke="var(--orange)" stroke-width="1.8" opacity="0.8"/>
+            <circle cx="358" cy="252" r="4" fill="var(--orange)" opacity="0.7"/>
+            <text x="358" y="281" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="9" font-weight="700" fill="var(--text)">SURICATA</text>
+            <text x="358" y="292" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="7" fill="var(--orange)">IDS · ACTIVE</text>
+            <text x="358" y="313" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="7" fill="var(--text-dim)">UBUNTU-2</text>
+          </g>
+          <!-- Nmap -->
+          <g class="node node--tool">
+            <rect class="node-bg" x="400" y="222" width="68" height="98" rx="11"/>
+            <!-- eye/radar icon -->
+            <ellipse cx="434" cy="252" rx="13" ry="9" fill="none"
+                     stroke="var(--blue)" stroke-width="1.8" opacity="0.8"/>
+            <circle cx="434" cy="252" r="4" fill="var(--blue)" opacity="0.65"/>
+            <text x="434" y="281" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="10" font-weight="700" fill="var(--text)">NMAP</text>
+            <text x="434" y="292" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="7" fill="var(--blue)">SCANNER</text>
+            <text x="434" y="313" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="7" fill="var(--text-dim)">KALI LINUX</text>
+          </g>
+          <!-- VirusTotal -->
+          <g class="node node--tool">
+            <rect class="node-bg" x="476" y="222" width="68" height="98" rx="11"/>
+            <!-- checkmark arrow icon -->
+            <path d="M501 247 l6 6 10-12" fill="none" stroke="var(--blue)"
+                  stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+            <rect x="497" y="240" width="26" height="20" rx="3" fill="none"
+                  stroke="var(--blue)" stroke-width="1.2" opacity="0.45"/>
+            <text x="510" y="281" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="8.5" font-weight="700" fill="var(--text)">VIRUS</text>
+            <text x="510" y="292" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="8.5" font-weight="700" fill="var(--text)">TOTAL</text>
+            <text x="510" y="313" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="7" fill="var(--text-dim)">WINDOWS</text>
+          </g>
+
+          <!-- Arrows: Suricata → Shuffle, Nmap → Hydra -->
+          <path id="vb1" d="M358,320 L358,364" fill="none" stroke="var(--border)" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <path id="vb2" d="M434,320 L434,364" fill="none" stroke="var(--border)" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <circle r="2.5" fill="var(--orange)"><animateMotion dur="1.4s" begin="0s"   repeatCount="indefinite"><mpath href="#vb1"/></animateMotion></circle>
+          <circle r="2.5" fill="var(--orange)"><animateMotion dur="1.4s" begin="0.35s" repeatCount="indefinite"><mpath href="#vb2"/></animateMotion></circle>
+
+          <!-- ---- Bottom tool row ---- -->
+          <!-- Shuffle SOAR -->
+          <g class="node node--tool">
+            <rect class="node-bg" x="324" y="364" width="68" height="102" rx="11"/>
+            <!-- Shuffle logo hint: square with G-like icon -->
+            <rect x="344" y="380" width="28" height="28" rx="6" fill="var(--orange)" opacity="0.18"/>
+            <rect x="344" y="380" width="28" height="28" rx="6" fill="none"
+                  stroke="var(--orange)" stroke-width="1.4" opacity="0.9"/>
+            <path d="M350 394 h8 v-4 h-4 v8 h8" fill="none" stroke="var(--orange)"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+            <text x="358" y="428" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="9" font-weight="800" fill="var(--text)">Shuffle</text>
+            <text x="358" y="440" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="7" fill="var(--orange)">SOAR · AUTO</text>
+          </g>
+          <!-- Hydra -->
+          <g class="node node--tool">
+            <rect class="node-bg" x="400" y="364" width="68" height="102" rx="11"/>
+            <!-- Hydra: key/snake hint -->
+            <circle cx="422" cy="392" r="7.5" fill="none"
+                    stroke="var(--orange)" stroke-width="2" opacity="0.8"/>
+            <line x1="427" y1="397" x2="440" y2="410" stroke="var(--orange)"
+                  stroke-width="2.2" stroke-linecap="round" opacity="0.8"/>
+            <line x1="438" y1="407" x2="444" y2="403" stroke="var(--orange)"
+                  stroke-width="1.6" stroke-linecap="round" opacity="0.6"/>
+            <line x1="440" y1="410" x2="446" y2="406" stroke="var(--orange)"
+                  stroke-width="1.6" stroke-linecap="round" opacity="0.6"/>
+            <text x="434" y="428" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="9" font-weight="700" fill="var(--text)">HYDRA</text>
+            <text x="434" y="440" text-anchor="middle" font-family="var(--font-display)"
+                  font-size="7" fill="var(--orange)">AUTH TEST</text>
+          </g>
+
+          <!-- Log Collection → back to Forwarder (main log flow) -->
+          <path id="vc1" d="M248,271 H232 V243" fill="none"
+                stroke="rgba(76,141,255,0.45)" stroke-width="1.4"
+                stroke-dasharray="3 4" marker-end="url(#arrow)"/>
+          <circle r="3" fill="var(--blue)">
+            <animateMotion dur="2.6s" begin="0s" repeatCount="indefinite"><mpath href="#vc1"/></animateMotion>
+          </circle>
+
+          <!-- Legend row at bottom -->
+          <g transform="translate(240,492)">
+            <circle cx="0"   cy="0" r="4.5" fill="var(--purple)" opacity="0.85"/>
+            <text x="10" y="4" font-family="var(--font-display)" font-size="9" fill="var(--text-dim)">Lab target</text>
+            <circle cx="110" cy="0" r="4.5" fill="var(--blue)" opacity="0.85"/>
+            <text x="120" y="4" font-family="var(--font-display)" font-size="9" fill="var(--text-dim)">Infrastructure</text>
+            <circle cx="250" cy="0" r="4.5" fill="var(--orange)" opacity="0.85"/>
+            <text x="260" y="4" font-family="var(--font-display)" font-size="9" fill="var(--text-dim)">Security tool</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ARCHITECTURE ============ -->
+  <section class="arch-section" id="architecture">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">THE PIPELINE</p>
+        <h2>Every layer of the lab, end to end</h2>
+        <p>A fully isolated VMware lab where simulated attacks are launched, detected, enriched, and resolved automatically — no manual gaps between detection and response.</p>
+        <ul class="pipeline-steps">
+          <li><b>1</b>Endpoints</li>
+          <li><b>2</b>Log Collection</li>
+          <li><b>3</b>Suricata IDS</li>
+          <li><b>4</b>Shuffle SOAR</li>
+          <li><b>5</b>VirusTotal</li>
+          <li><b>6</b>Splunk SIEM</li>
+        </ul>
+      </div>
+
+      <div class="arch-grid">
+        <div class="diagram-card">
+          <svg id="labSvg" viewBox="0 0 1040 740">
+            <!-- outer container -->
+            <rect x="20" y="40" width="1000" height="660" rx="22" fill="none" stroke="rgba(155,107,255,0.35)" stroke-width="1.4" stroke-dasharray="3 6"/>
+            <text x="520" y="65" text-anchor="middle" font-family="var(--font-display)" font-size="12" letter-spacing="3" fill="var(--text-dim)">MAIN SOC LAB ENVIRONMENT</text>
+
+            <g class="footer-status" transform="translate(840,55)">
+              <circle cx="0" cy="0" r="4" fill="var(--blue)"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></circle>
+              <text x="10" y="4" font-family="var(--font-display)" font-size="10" letter-spacing="1.5" fill="var(--text-dim)">LAB ONLINE</text>
+            </g>
+
+            <!-- isolated VM sub-box -->
+            <rect x="305" y="95" width="705" height="150" rx="16" fill="rgba(76,141,255,0.04)" stroke="rgba(76,141,255,0.25)" stroke-width="1.2" stroke-dasharray="2 5"/>
+            <text x="657" y="113" text-anchor="middle" font-family="var(--font-display)" font-size="10" letter-spacing="2" fill="var(--blue)" opacity="0.8">ISOLATED VM LAB · VMWARE</text>
+
+            <!-- left infra column -->
+            <g class="node node--infra" data-id="splunk" tabindex="0" role="button" aria-label="Splunk SIEM">
+              <rect class="node-bg" x="60" y="140" width="200" height="120" rx="16"/>
+              <use href="#i-dashboard" class="node-icon" x="84" y="164" width="32" height="32"/>
+              <text class="node-label" x="84" y="218" font-size="15">Splunk SIEM</text>
+              <text class="node-tag" x="84" y="234">MAIN WINDOWS HOST</text>
+            </g>
+            <path class="flow-line" d="M160,260 L160,320" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+            <g class="node node--infra" data-id="forwarder" tabindex="0" role="button" aria-label="Splunk Universal Forwarder">
+              <rect class="node-bg" x="60" y="320" width="200" height="100" rx="16"/>
+              <use href="#i-server" class="node-icon" x="84" y="342" width="30" height="30"/>
+              <text class="node-label" x="84" y="392" font-size="15">Forwarder</text>
+              <text class="node-tag" x="84" y="407">UNIVERSAL FORWARDER</text>
+            </g>
+
+            <!-- VM endpoint row -->
+            <g class="node node--endpoint" data-id="ubuntu1" tabindex="0" role="button" aria-label="Ubuntu Desktop 1">
+              <rect class="node-bg" x="326" y="130" width="150" height="100" rx="14"/>
+              <use href="#i-desktop" class="node-icon" x="343" y="148" width="26" height="26"/>
+              <text class="node-label" x="343" y="195" font-size="13">Ubuntu — 1</text>
+              <text class="node-tag" x="343" y="210">LAB TARGET</text>
+            </g>
+            <g class="node node--endpoint" data-id="ubuntu2" tabindex="0" role="button" aria-label="Ubuntu Desktop 2">
+              <rect class="node-bg" x="497" y="130" width="150" height="100" rx="14"/>
+              <use href="#i-desktop" class="node-icon" x="514" y="148" width="26" height="26"/>
+              <text class="node-label" x="514" y="195" font-size="13">Ubuntu — 2</text>
+              <text class="node-tag" x="514" y="210">LAB TARGET</text>
+            </g>
+            <g class="node node--endpoint" data-id="kali" tabindex="0" role="button" aria-label="Kali Linux">
+              <rect class="node-bg" x="668" y="130" width="150" height="100" rx="14"/>
+              <use href="#i-terminal" class="node-icon" x="685" y="148" width="26" height="26"/>
+              <text class="node-label" x="685" y="195" font-size="13">Kali Linux</text>
+              <text class="node-tag" x="685" y="210">ATTACK SIM</text>
+            </g>
+            <g class="node node--endpoint" data-id="windows10" tabindex="0" role="button" aria-label="Windows 10">
+              <rect class="node-bg" x="839" y="130" width="150" height="100" rx="14"/>
+              <use href="#i-grid" class="node-icon" x="856" y="148" width="26" height="26"/>
+              <text class="node-label" x="856" y="195" font-size="13">Windows 10</text>
+              <text class="node-tag" x="856" y="210">LAB TARGET</text>
+            </g>
+
+            <!-- arrows VM -> tools -->
+            <path id="lp1" class="flow-line" d="M401,230 L401,350" marker-end="url(#arrow)"/>
+            <path id="lp2" class="flow-line" d="M572,230 L572,350" marker-end="url(#arrow)"/>
+            <path id="lp3" class="flow-line" d="M743,230 L743,350" marker-end="url(#arrow)"/>
+            <path id="lp4" class="flow-line" d="M914,230 L914,350" marker-end="url(#arrow)"/>
+            <circle r="3.2" fill="var(--purple)" style="color:var(--purple)" class="pulse"><animateMotion dur="2.2s" begin="0s" repeatCount="indefinite"><mpath href="#lp1"/></animateMotion></circle>
+            <circle r="3.2" fill="var(--purple)" style="color:var(--purple)" class="pulse"><animateMotion dur="2.2s" begin="0.4s" repeatCount="indefinite"><mpath href="#lp2"/></animateMotion></circle>
+            <circle r="3.2" fill="var(--purple)" style="color:var(--purple)" class="pulse"><animateMotion dur="2.2s" begin="0.8s" repeatCount="indefinite"><mpath href="#lp3"/></animateMotion></circle>
+            <circle r="3.2" fill="var(--purple)" style="color:var(--purple)" class="pulse"><animateMotion dur="2.2s" begin="1.2s" repeatCount="indefinite"><mpath href="#lp4"/></animateMotion></circle>
+
+            <!-- detection / tool row -->
+            <g class="node node--infra" data-id="logcollection" tabindex="0" role="button" aria-label="Log Collection">
+              <rect class="node-bg" x="326" y="350" width="150" height="100" rx="14"/>
+              <use href="#i-log" class="node-icon" x="343" y="368" width="26" height="26"/>
+              <text class="node-label" x="343" y="415" font-size="13">Log Collection</text>
+              <text class="node-tag" x="343" y="430">INGESTION</text>
+            </g>
+            <g class="node node--tool" data-id="suricata" tabindex="0" role="button" aria-label="Suricata IDS">
+              <rect class="node-bg" x="497" y="350" width="150" height="100" rx="14"/>
+              <use href="#i-waves" class="node-icon" x="514" y="368" width="26" height="26"/>
+              <text class="node-label" x="514" y="415" font-size="13">Suricata</text>
+              <text class="node-tag" x="514" y="430">ACTIVE TOOL</text>
+            </g>
+            <g class="node node--tool" data-id="nmap" tabindex="0" role="button" aria-label="Nmap Scanner">
+              <rect class="node-bg" x="668" y="350" width="150" height="100" rx="14"/>
+              <use href="#i-radar" class="node-icon" x="685" y="368" width="26" height="26"/>
+              <text class="node-label" x="685" y="415" font-size="13">Nmap</text>
+              <text class="node-tag" x="685" y="430">ACTIVE TOOL</text>
+            </g>
+            <g class="node node--tool" data-id="virustotal" tabindex="0" role="button" aria-label="VirusTotal">
+              <rect class="node-bg" x="839" y="350" width="150" height="100" rx="14"/>
+              <use href="#i-globe" class="node-icon" x="856" y="368" width="26" height="26"/>
+              <text class="node-label" x="856" y="415" font-size="13">VirusTotal</text>
+              <text class="node-tag" x="856" y="430">ACTIVE TOOL</text>
+            </g>
+
+            <!-- arrows tools -> automation -->
+            <path id="lp5" class="flow-line" d="M572,450 L572,540" marker-end="url(#arrow)"/>
+            <path id="lp6" class="flow-line" d="M743,450 L743,540" marker-end="url(#arrow)"/>
+            <circle r="3.2" fill="var(--orange)" style="color:var(--orange)" class="pulse"><animateMotion dur="1.8s" begin="0s" repeatCount="indefinite"><mpath href="#lp5"/></animateMotion></circle>
+            <circle r="3.2" fill="var(--orange)" style="color:var(--orange)" class="pulse"><animateMotion dur="1.8s" begin="0.5s" repeatCount="indefinite"><mpath href="#lp6"/></animateMotion></circle>
+
+            <!-- automation row -->
+            <g class="node node--tool" data-id="shuffle" tabindex="0" role="button" aria-label="Shuffle SOAR">
+              <rect class="node-bg" x="497" y="540" width="150" height="100" rx="14"/>
+              <use href="#i-bolt" class="node-icon" x="514" y="558" width="26" height="26"/>
+              <text class="node-label" x="514" y="605" font-size="13">Shuffle</text>
+              <text class="node-tag" x="514" y="620">SOAR · ACTIVE</text>
+            </g>
+            <g class="node node--tool" data-id="hydra" tabindex="0" role="button" aria-label="Hydra">
+              <rect class="node-bg" x="668" y="540" width="150" height="100" rx="14"/>
+              <use href="#i-key" class="node-icon" x="685" y="558" width="26" height="26"/>
+              <text class="node-label" x="685" y="605" font-size="13">Hydra</text>
+              <text class="node-tag" x="685" y="620">AUTH TEST · ACTIVE</text>
+            </g>
+
+            <!-- log collection -> forwarder connector (signature live flow) -->
+            <path id="lpMain" class="flow-line" d="M401,450 V620 H160 V420" marker-end="url(#arrow)" stroke="rgba(76,141,255,0.5)"/>
+            <circle r="4" fill="var(--blue)" style="color:var(--blue)" class="pulse"><animateMotion dur="3.4s" begin="0s" repeatCount="indefinite"><mpath href="#lpMain"/></animateMotion></circle>
+
+            <!-- legend -->
+            <g transform="translate(305,672)" font-family="var(--font-display)" font-size="11" fill="var(--text-muted)">
+              <circle cx="0" cy="-4" r="5" fill="var(--purple)"/><text x="12" y="0">Lab target</text>
+              <circle cx="120" cy="-4" r="5" fill="var(--blue)"/><text x="132" y="0">Pipeline / SIEM</text>
+              <circle cx="280" cy="-4" r="5" fill="var(--orange)"/><text x="292" y="0">Active security tool</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="panel-card" id="panelCard">
+          <div class="panel-default" id="panelDefault">
+            <p class="panel-eyebrow">Overview</p>
+            <h3>How a detection moves through the lab</h3>
+            <ol>
+              <li><b>Endpoints</b> generate normal + malicious traffic from the isolated VMs.</li>
+              <li><b>Forwarder</b> ships logs to the central Splunk indexer in real time.</li>
+              <li><b>Suricata</b> flags scans and known-bad patterns against signature + Sigma rules.</li>
+              <li><b>Shuffle</b> picks up the alert and runs an automated triage playbook.</li>
+              <li><b>VirusTotal</b> enriches the alert with global threat intelligence.</li>
+              <li><b>Splunk</b> surfaces the correlated, enriched alert on the analyst dashboard.</li>
+            </ol>
+            <p class="panel-hint">Click any node in the diagram to see its role in detail.</p>
+          </div>
+          <div id="panelDetail" style="display:none;">
+            <p class="panel-eyebrow" id="pCat">Active Tool</p>
+            <h3 id="pTitle">Suricata IDS</h3>
+            <p class="panel-desc" id="pDesc"></p>
+            <p class="panel-stage"><b>Stage in pipeline:</b> <span id="pStage"></span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TOOLS GRID ============ -->
+  <section class="tools-section" id="tools">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">THE TOOLKIT</p>
+        <h2>What's actually running in the lab</h2>
+        <p>Every tool here is wired into the pipeline — nothing is a standalone demo. Logs, alerts, and enrichment all flow into one dashboard.</p>
+      </div>
+      <div class="tools-grid">
+        <div class="tool-card cat-infra">
+          <div class="tool-icon"><svg viewBox="0 0 24 24"><use href="#i-dashboard"/></svg></div>
+          <h4>Splunk SIEM</h4>
+          <div class="role">Detection &amp; Triage</div>
+          <p>Where everything lands — searchable logs, correlation rules, and dashboards an analyst would actually work from.</p>
+        </div>
+        <div class="tool-card cat-tool">
+          <div class="tool-icon"><svg viewBox="0 0 24 24"><use href="#i-waves"/></svg></div>
+          <h4>Suricata IDS</h4>
+          <div class="role">Network Detection</div>
+          <p>Inspects traffic against signature rules and custom Sigma rules to flag scans, exploits, and known-bad patterns.</p>
+        </div>
+        <div class="tool-card cat-tool">
+          <div class="tool-icon"><svg viewBox="0 0 24 24"><use href="#i-radar"/></svg></div>
+          <h4>Nmap</h4>
+          <div class="role">Recon Simulation</div>
+          <p>Run from Kali to simulate reconnaissance — its scan signatures are exactly what Suricata is tuned to catch.</p>
+        </div>
+        <div class="tool-card cat-tool">
+          <div class="tool-icon"><svg viewBox="0 0 24 24"><use href="#i-globe"/></svg></div>
+          <h4>VirusTotal</h4>
+          <div class="role">Threat Enrichment</div>
+          <p>Shuffle calls the VirusTotal API automatically to check file hashes and IPs against global threat intelligence.</p>
+        </div>
+        <div class="tool-card cat-tool">
+          <div class="tool-icon"><svg viewBox="0 0 24 24"><use href="#i-bolt"/></svg></div>
+          <h4>Shuffle SOAR</h4>
+          <div class="role">Automated Response</div>
+          <p>Picks up Suricata alerts and runs a full playbook — enrich, notify, and block — with no human in the loop.</p>
+        </div>
+        <div class="tool-card cat-tool">
+          <div class="tool-icon"><svg viewBox="0 0 24 24"><use href="#i-key"/></svg></div>
+          <h4>Hydra</h4>
+          <div class="role">Brute-Force Simulation</div>
+          <p>Simulates credential-stuffing and brute-force login attempts to validate alerting thresholds end to end.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-status">
+      <span class="dot-pulse"></span> LAB STATUS: ONLINE — open-source SOC engineering project
+    </div>
+    <div class="footer-links">
+      <a href="#architecture">Architecture</a>
+      <a href="#tools">Tools</a>
+      <a href="https://github.com/ChaithanyaGude/splunk-siem-integration" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ---- node detail panel ----
+  var nodeData = {
+    splunk: {title:"Splunk SIEM", cat:"Infrastructure", catClass:"", stage:"Final stage — detection & triage", desc:"The main Windows host running Splunk. Every log, alert, and enrichment result converges here into searchable indexes and analyst dashboards."},
+    forwarder: {title:"Universal Forwarder", cat:"Infrastructure", catClass:"", stage:"Log shipping", desc:"A lightweight Splunk Universal Forwarder that ships logs from every endpoint and tool to the central indexer in real time."},
+    ubuntu1: {title:"Ubuntu Desktop — 1", cat:"Lab Target", catClass:"cat-endpoint", stage:"Endpoint layer", desc:"A simulated employee workstation generating both normal and malicious traffic, used to validate detection coverage."},
+    ubuntu2: {title:"Ubuntu Desktop — 2", cat:"Lab Target", catClass:"cat-endpoint", stage:"Endpoint layer", desc:"A second Linux endpoint target, isolated inside the VMware lab, instrumented to forward logs into the pipeline."},
+    kali: {title:"Kali Linux", cat:"Lab Target", catClass:"cat-endpoint", stage:"Endpoint layer — attacker", desc:"Runs the offensive toolkit — Nmap scans and Hydra brute-force attempts — that the rest of the lab is built to catch."},
+    windows10: {title:"Windows 10", cat:"Lab Target", catClass:"cat-endpoint", stage:"Endpoint layer", desc:"A Windows endpoint instrumented to forward Sysmon and event logs into the central pipeline alongside the Linux hosts."},
+    logcollection: {title:"Log Collection", cat:"Infrastructure", catClass:"", stage:"Ingestion layer", desc:"All raw logs from every endpoint land here first — normalized and indexed before any detection logic runs against them."},
+    suricata: {title:"Suricata IDS", cat:"Active Tool", catClass:"cat-tool", stage:"Detection layer", desc:"Inspects network traffic against signature rules and custom Sigma rules to flag scans, exploits, and known-bad patterns."},
+    nmap: {title:"Nmap", cat:"Active Tool", catClass:"cat-tool", stage:"Detection target", desc:"Launched from Kali to simulate reconnaissance. Its scan signatures are exactly what Suricata is tuned to detect."},
+    virustotal: {title:"VirusTotal", cat:"Active Tool", catClass:"cat-tool", stage:"Enrichment layer", desc:"Called automatically by Shuffle to check file hashes and IP addresses against global threat intelligence feeds."},
+    shuffle: {title:"Shuffle SOAR", cat:"Active Tool", catClass:"cat-tool", stage:"Automation layer", desc:"Picks up Suricata alerts and runs a triage playbook — enrich, notify, and optionally block — without a human in the loop."},
+    hydra: {title:"Hydra", cat:"Active Tool", catClass:"cat-tool", stage:"Detection target", desc:"Simulates credential-stuffing and brute-force login attempts against lab services to validate alerting thresholds."}
+  };
+
+  var nodes = document.querySelectorAll('#labSvg .node');
+  var panelDefault = document.getElementById('panelDefault');
+  var panelDetail = document.getElementById('panelDetail');
+  var pCat = document.getElementById('pCat');
+  var pTitle = document.getElementById('pTitle');
+  var pDesc = document.getElementById('pDesc');
+  var pStage = document.getElementById('pStage');
+
+  function selectNode(id, el){
+    var d = nodeData[id];
+    if(!d) return;
+    nodes.forEach(function(n){ n.classList.remove('is-active'); });
+    el.classList.add('is-active');
+    pCat.textContent = d.cat;
+    pCat.className = 'panel-eyebrow ' + d.catClass;
+    pTitle.textContent = d.title;
+    pDesc.textContent = d.desc;
+    pStage.textContent = d.stage;
+    panelDefault.style.display = 'none';
+    panelDetail.style.display = 'block';
+  }
+
+  nodes.forEach(function(n){
+    var id = n.getAttribute('data-id');
+    n.addEventListener('click', function(){ selectNode(id, n); });
+    n.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        selectNode(id, n);
+      }
+    });
+  });
+
+  // ---- dark / light mode toggle ----
+  (function(){
+    var btn = document.getElementById('themeToggle');
+    var html = document.documentElement;
+    // restore saved preference
+    if(localStorage.getItem('theme') === 'light') html.classList.add('light');
+    btn.addEventListener('click', function(){
+      html.classList.toggle('light');
+      localStorage.setItem('theme', html.classList.contains('light') ? 'light' : 'dark');
+    });
+  })();
+</script>
+
+</body>
+</html>
